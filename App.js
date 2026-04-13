@@ -1,5 +1,5 @@
-import React from 'react'; // Added React import
-import { Text, StyleSheet } from 'react-native'; // Added Text here!
+import React from 'react';
+import { Text, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';

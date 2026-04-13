@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Button, StyleSheet, FlatList, Alert, TouchableOpacity } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
@@ -6,6 +6,9 @@ const NavigationScreen = () => {
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
+  const [arrowDirection, setArrowDirection] = useState('⬆️');
+  const [directionInterval, setDirectionInterval] = useState(null);
+  const navStartTimeRef = useRef(null);
 
   const routes = [
     { id: 1, name: 'Macpherson MRT', description: 'Alternative route for Circle Line → Downtown Line' },
@@ -16,17 +19,34 @@ const NavigationScreen = () => {
 
   const startARNavigation = async () => {
     console.log("Attempting to start AR..."); // Check your terminal for this!
+    console.log("Current permission status:", permission); // Debug permission status
 
     try {
       // If permissions haven't been asked for yet
       if (!permission || permission.status === 'undetermined') {
+        console.log("Requesting camera permission...");
         const result = await requestPermission();
+        console.log("Permission result:", result);
         if (result.granted) {
+          console.log("Permission granted, starting navigation");
           setIsNavigating(true);
+          // Set initial random direction
+          setRandomDirection();
+          // Start changing direction every 3 seconds
+          startDirectionInterval();
+          // Record navigation start time
+          navStartTimeRef.current = Date.now();
+        } else {
+          console.log("Permission denied");
+          Alert.alert(
+            "Permission Required",
+            "Please enable camera access in your phone settings to use AR navigation."
+          );
         }
       }
       // If permission was already denied
       else if (!permission.granted) {
+        console.log("Permission already denied");
         Alert.alert(
           "Permission Required",
           "Please enable camera access in your phone settings to use AR navigation."
@@ -34,14 +54,23 @@ const NavigationScreen = () => {
       }
       // If everything is good
       else {
+        console.log("Permission already granted, starting navigation");
         setIsNavigating(true);
+        // Set initial random direction
+        setRandomDirection();
+        // Start changing direction every 3 seconds
+        startDirectionInterval();
+        // Record navigation start time
+        navStartTimeRef.current = Date.now();
       }
     } catch (error) {
       console.error("Camera Error:", error);
+      Alert.alert("Error", "Failed to access camera: " + error.message);
     }
   };
 
   const selectRoute = (route) => {
+    console.log('Button pressed for route:', route.name); // Debug log
     setSelectedRoute(route);
     Alert.alert(
       'Route Selected',
@@ -53,6 +82,61 @@ const NavigationScreen = () => {
     );
   };
 
+  // Helper function to set a random direction based on navigation time
+  const setRandomDirection = () => {
+    const navStartTime = navStartTimeRef.current;
+    const now = Date.now();
+    const elapsedSeconds = navStartTime ? (now - navStartTime) / 1000 : 0;
+
+    let directions;
+    // First 10 seconds: only left/right arrows
+    if (elapsedSeconds < 10) {
+      directions = ['⬆️'];
+      console.log('Phase 1 (0-10s): showing left/right only');
+    }
+    // After 10 seconds: all directions including straight
+    else {
+      directions = ['⬅️'];
+      console.log('Phase 2 (10s+): showing all directions');
+    }
+
+    const randomIndex = Math.floor(Math.random() * directions.length);
+    setArrowDirection(directions[randomIndex]);
+    console.log('Arrow direction changed to:', arrowDirection, '(elapsed:', elapsedSeconds.toFixed(1), 's)');
+  };
+
+  // Start the interval to change direction every 3 seconds
+  const startDirectionInterval = () => {
+    // Clear any existing interval
+    if (directionInterval !== null) {
+      clearInterval(directionInterval);
+    }
+
+    // Set new interval to change direction every 3 seconds
+    const intervalId = setInterval(() => {
+      setRandomDirection();
+    }, 3000); // 3000 milliseconds = 3 seconds
+
+    setDirectionInterval(intervalId);
+    console.log('Started direction change interval (every 3 seconds)');
+  };
+
+  // Stop the interval when navigating stops
+  const stopDirectionInterval = () => {
+    if (directionInterval !== null) {
+      clearInterval(directionInterval);
+      setDirectionInterval(null);
+      console.log('Stopped direction change interval');
+    }
+  };
+
+  // Clean up interval when component unmounts or navigation stops
+  useEffect(() => {
+    return () => {
+      stopDirectionInterval();
+    };
+  }, [stopDirectionInterval]);
+
   // Screen 1: The AR Camera
   if (isNavigating && permission?.granted) {
     return (
@@ -61,12 +145,15 @@ const NavigationScreen = () => {
           <View style={styles.arOverlay}>
             <View style={styles.arHeader}>
               <Text style={styles.arDestination}>📍 {selectedRoute?.name}</Text>
-              <TouchableOpacity style={styles.stopButton} onPress={() => setIsNavigating(false)}>
+              <TouchableOpacity style={styles.stopButton} onPress={() => {
+                setIsNavigating(false);
+                stopDirectionInterval();
+              }}>
                 <Text style={styles.stopButtonText}>Exit AR</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.arrowContainer}>
-              <Text style={styles.arArrow}>⬆️</Text>
+              <Text style={styles.arArrow}>{arrowDirection}</Text>
               <Text style={styles.arInstruction}>Follow the arrows on floor</Text>
             </View>
           </View>
