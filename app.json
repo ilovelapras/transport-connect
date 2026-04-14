@@ -25,8 +25,11 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "CAMERA"
-      ]
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.lapras21.transportconnect"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,6 +41,11 @@
           "cameraPermission": "Allow TransportConnect to access your camera for AR navigation features."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "53a4928d-2756-4462-8eaf-3e34feae86d6"
+      }
+    }
   }
 }

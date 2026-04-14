@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Button, StyleSheet, ActivityIndicator, Alert, Image } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
 const CrowdScreen = () => {
@@ -7,6 +7,9 @@ const CrowdScreen = () => {
   const [endStation, setEndStation] = useState('Marina Bay Sands');
   const [isTraveling, setIsTraveling] = useState(false);
   const [isLooking, setIsLooking] = useState(false);
+  const [joinedMembers, setJoinedMembers] = useState([]);
+  const [memberCount, setMemberCount] = useState(0);
+  const [timerId, setTimerId] = useState(null);
   const [crowdTravels, setCrowdTravels] = useState([
     { from: 'City Hall', to: 'Marina Bay Sands', time: '2 min ago' },
     { from: 'Raffles Place', to: 'Orchard Road', time: '5 min ago' },
@@ -25,7 +28,16 @@ const CrowdScreen = () => {
 
   const handleDeclareTravel = () => {
     if (startStation !== endStation) {
+      setIsTraveling(true);
       setIsLooking(true);
+
+      // Set timer to add anonymous member after 5 seconds
+      const timer = setTimeout(() => {
+        setJoinedMembers(prev => [...prev, 'Anonymous56 joined.']);
+        setMemberCount(prev => prev + 1);
+      }, 5000);
+
+      setTimerId(timer);
     } else {
       Alert.alert('Error', 'Start and end stations must be different.');
     }
@@ -86,15 +98,31 @@ const CrowdScreen = () => {
         <>
           {isLooking ? (
             <View style={styles.lookingContainer}>
-              <Text style={styles.membersFound}>0 members found</Text>
+              <Text style={styles.membersFound}>{memberCount} members found</Text>
               <View style={styles.lookingContent}>
                 <Text style={styles.lookingTitle}>Currently Looking...</Text>
                 <View style={styles.loadingWrapper}>
                   <ActivityIndicator size="large" color="#e63946" />
                 </View>
+                {joinedMembers.length > 0 && (
+                  <View style={styles.joinedMembersContainer}>
+                    {joinedMembers.map((member, index) => (
+                      <View key={index} style={styles.joinedMemberItem}>
+                        <Image source={require('../anonymous.jpg')} style={styles.memberImage} />
+                        <Text style={styles.memberName}>{member}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
               </View>
               <View style={styles.cancelButtonContainer}>
-                <Button title="Cancel" onPress={() => setIsLooking(false)} color="#999" />
+                <Button title="Cancel" onPress={() => {
+                  clearTimeout(timerId);
+                  setIsTraveling(false);
+                  setIsLooking(false);
+                  setJoinedMembers([]);
+                  setMemberCount(0);
+                }} color="#999" />
               </View>
             </View>
           ) : (
@@ -233,6 +261,26 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
+  },
+  joinedMembersContainer: {
+    marginTop: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  joinedMemberItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  memberImage: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  memberName: {
+    fontSize: 16,
+    color: '#333',
   },
 });
 
