@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "TransportConnect",
+    "slug": "transport-connect",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#e63946"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "TransportConnect uses the camera for AR navigation to show directional arrows during disruptions."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#e63946"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.lapras21.transportconnect"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "name": "TransportConnect",
+      "themeColor": "#e63946",
+      "backgroundColor": "#f8f9fa"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow TransportConnect to access your camera for AR navigation features."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "53a4928d-2756-4462-8eaf-3e34feae86d6"
+      }
+    }
+  }
+}
